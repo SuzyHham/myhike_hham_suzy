@@ -96,8 +96,8 @@ async function displayCardsDynamically() {
   const hikesCollectionRef = collection(db, "hikes");
   const querySnapshot = await getDocs(hikesCollectionRef);
 
-  querySnapshot.forEach((doc) => {
-    const hike = doc.data();
+  querySnapshot.forEach((docSnap) => {
+    const hike = docSnap.data();
     const newcard = cardTemplate.content.cloneNode(true);
 
     newcard.querySelector(".card-title").textContent = hike.name;
@@ -105,9 +105,11 @@ async function displayCardsDynamically() {
       hike.details || `Located in ${hike.city}.`;
     newcard.querySelector(".card-length").textContent = hike.length;
 
-    // ✅ Vite public folder rule: public/images/BBY01.jpg -> /images/BBY01.jpg
+    // image (png)
     const img = newcard.querySelector(".card-image");
     if (img) img.src = `/images/${hike.code}.png`;
+
+    newcard.querySelector(".read-more").href = `eachHike.html?docID=${docSnap.id}`;
 
     container.appendChild(newcard);
   });
@@ -124,20 +126,17 @@ function getGreeting() {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  // If not logged in, send them back
   if (!user) {
     window.location.href = "/index.html";
     return;
   }
 
-  // Greeting text: use email prefix as a safe default
   const name = user.email ? user.email.split("@")[0] : "friend";
   const greetingEl = document.getElementById("greetingText");
   if (greetingEl) greetingEl.textContent = `${getGreeting()}, ${name}`;
 
   setRandomQuote();
 
-  // ✅ Ensure data exists, then display cards
   await seedHikes();
   await displayCardsDynamically();
 });
